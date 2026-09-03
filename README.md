@@ -9,7 +9,7 @@ ITに関するスキルの網羅表
 
 1. 公開したい静的ファイル（`index.html`、CSS、JS、画像など）を `site/` 配下に配置する
 2. 変更をコミットして `main` ブランチに反映する
-3. GitHub の `Settings > Pages` で `Build and deployment` の `Source` を `GitHub Actions` にする
+3. （初回のみ）ワークフロー実行時に GitHub Pages の `Source` は自動で `GitHub Actions` に設定されます
 
 ### 公開先フォルダを変えたい場合
 
