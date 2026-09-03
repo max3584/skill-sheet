@@ -3,7 +3,7 @@ ITに関するスキルの網羅表
 
 ## 静的HTML公開（GitHub Pages）
 
-このリポジトリでは、`/home/runner/work/skill-sheet/skill-sheet/site` フォルダの中身をそのまま GitHub Pages に公開する設定にしています。
+このリポジトリでは、リポジトリルート配下の `site/` フォルダの中身をそのまま GitHub Pages に公開する設定にしています。
 
 ### 使い方
 
