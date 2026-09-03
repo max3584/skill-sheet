@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes">
+<title>インフラ技術マップ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0F1719; --panel:#141F21; --line:#233436; --ink:#DCE5E4;
+  --muted2:#8B9E9C; --edge:#2C4245; --edge-hot:#6FD6BA; --flowline:#F2C94C;
+  --fac:#D9A05B; --fac-bg:#2b2a22; --fac-st:#7e623d;
+  --opt:#E8C15B; --opt-bg:#2d2f22; --opt-st:#86753d;
+  --sub:#7FD4C1; --sub-bg:#1f3131; --sub-st:#4d7f75;
+  --icx:#E7799F; --icx-bg:#2d252c; --icx-st:#864d63;
+  --wl:#F2A5D1; --wl-bg:#2f2b33; --wl-st:#8c657e;
+  --rt:#F09E9E; --rt-bg:#2f2a2c; --rt-st:#8b6162;
+  --net:#3FBF9C; --net-bg:#162f2b; --net-st:#297361;
+  --traf:#6E9BE8; --traf-bg:#1c2936; --traf-st:#43608b;
+  --plat:#9B8CF0; --plat-bg:#232737; --plat-st:#5c578f;
+  --data:#5FC7A8; --data-bg:#1a302d; --data-st:#3b7868;
+  --sre:#7ED3F7; --sre-bg:#1f3138; --sre-st:#4c7e93;
+  --ops:#A8B6E8; --ops-bg:#242d36; --ops-st:#636e8b;
+  --lang:#F0B27A; --lang-bg:#2f2d27; --lang-st:#8b6c4e;
+  --app:#E68A5C; --app-bg:#2d2722; --app-st:#85563e;
+  --flow:#8FB8FF; --flow-bg:#212e39; --flow-st:#557098;
+  --dsgn:#C77DD9; --dsgn-bg:#292534; --dsgn-st:#744f83;
+  --proc:#B8C46A; --proc-bg:#272f24; --proc-st:#6c7646;
+  --pf:#D7A3E8; --pf-bg:#2b2b36; --pf-st:#7d648b;
+  --cross:#4FD2D2; --cross-bg:#183133; --cross-st:#327e7f;
+  --arch:#8CC06A; --arch-bg:#212f24; --arch-st:#547446;
+  --base:#9AA8A6; --base-bg:#222b2d; --base-st:#5b6767;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+  font-family:"IBM Plex Sans JP",-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;
+  font-weight:400;-webkit-text-size-adjust:100%}
+header{position:sticky;top:0;z-index:5;background:rgba(15,23,25,.94);
+  border-bottom:1px solid var(--line);padding:10px 14px 8px}
+h1{margin:0 0 2px;font-size:16px;font-weight:500;letter-spacing:.01em}
+.sub{margin:0;font-size:12px;color:var(--muted2);line-height:1.5}
+.bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+.flowbar{border-top:1px solid var(--line);padding-top:8px}
+.flowbar .lbl{font-size:11.5px;color:var(--muted2);margin-right:2px}
+.chip{border:1px solid var(--line);background:var(--panel);color:var(--muted2);
+  border-radius:6px;padding:4px 9px;font-size:11.5px;font-family:inherit;cursor:pointer;
+  display:inline-flex;align-items:center;gap:5px}
+.chip:hover{border-color:#35494B;color:var(--ink)}
+.chip:focus-visible{outline:2px solid var(--edge-hot);outline-offset:1px}
+.chip[aria-pressed="true"]{color:var(--ink);border-color:#3D5254;background:#1A2729}
+.flowchip[aria-pressed="true"]{border-color:var(--flowline);color:var(--flowline)}
+.dot{width:8px;height:8px;border-radius:2px;display:inline-block}
+.zoom{margin-left:auto;display:flex;gap:4px}
+#status{font-size:11.5px;color:var(--muted2);margin-top:6px;min-height:16px;line-height:1.5}
+#status b{color:var(--ink);font-weight:500}
+#scroller{overflow:auto;-webkit-overflow-scrolling:touch;padding:10px 0 28px}
+svg{display:block}
+.node rect{transition:opacity .12s linear}
+.node text{pointer-events:none}
+.node{cursor:pointer}
+.edge{fill:none;stroke:var(--edge);stroke-width:1;opacity:.24}
+.dim{opacity:.035}
+.node.dim{opacity:.1}
+.edge.hot{stroke:var(--edge-hot);opacity:.95;stroke-width:1.6}
+.flowpath{fill:none;stroke:var(--flowline);stroke-width:2.4;opacity:.95}
+.flowseq{fill:var(--flowline);font-size:15px;font-weight:500}
+.band{fill:none;stroke:var(--line);stroke-width:1;stroke-dasharray:3 5}
+.bandlabel{fill:var(--muted2);font-size:13px;font-weight:500}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>インフラ技術マップ</h1>
+  <p class="sub">上2段が運ぶ側、下段が作る側。ノードをタップすると接続だけが残ります。背景をタップで解除。</p>
+  <div class="bar">
+    <button class="chip" data-g="arch" aria-pressed="false"><i class="dot" style="background:var(--arch)"></i>アーキテクチャ</button>
+    <button class="chip" data-g="cross" aria-pressed="false"><i class="dot" style="background:var(--cross)"></i>横断</button>
+    <button class="chip" data-g="base" aria-pressed="false"><i class="dot" style="background:var(--base)"></i>土台</button>
+    <button class="chip" data-g="fac" aria-pressed="false"><i class="dot" style="background:var(--fac)"></i>ファシリティ / DC</button>
+    <button class="chip" data-g="opt" aria-pressed="false"><i class="dot" style="background:var(--opt)"></i>伝送・光</button>
+    <button class="chip" data-g="sub" aria-pressed="false"><i class="dot" style="background:var(--sub)"></i>加入者収容</button>
+    <button class="chip" data-g="icx" aria-pressed="false"><i class="dot" style="background:var(--icx)"></i>相互接続</button>
+    <button class="chip" data-g="wl" aria-pressed="false"><i class="dot" style="background:var(--wl)"></i>無線・モバイル</button>
+    <button class="chip" data-g="rt" aria-pressed="false"><i class="dot" style="background:var(--rt)"></i>音声・リアルタイム</button>
+    <button class="chip" data-g="net" aria-pressed="false"><i class="dot" style="background:var(--net)"></i>ネットワーク</button>
+    <button class="chip" data-g="traf" aria-pressed="false"><i class="dot" style="background:var(--traf)"></i>帯域・輻輳制御</button>
+    <button class="chip" data-g="plat" aria-pressed="false"><i class="dot" style="background:var(--plat)"></i>サーバ基盤</button>
+    <button class="chip" data-g="data" aria-pressed="false"><i class="dot" style="background:var(--data)"></i>データ・永続化</button>
+    <button class="chip" data-g="sre" aria-pressed="false"><i class="dot" style="background:var(--sre)"></i>SRE / 信頼性</button>
+    <button class="chip" data-g="ops" aria-pressed="false"><i class="dot" style="background:var(--ops)"></i>運用・保守</button>
+    <button class="chip" data-g="lang" aria-pressed="false"><i class="dot" style="background:var(--lang)"></i>言語・ランタイム</button>
+    <button class="chip" data-g="app" aria-pressed="false"><i class="dot" style="background:var(--app)"></i>アプリ実装</button>
+    <button class="chip" data-g="flow" aria-pressed="false"><i class="dot" style="background:var(--flow)"></i>データフロー / 連携</button>
+    <button class="chip" data-g="dsgn" aria-pressed="false"><i class="dot" style="background:var(--dsgn)"></i>設計・方法論</button>
+    <button class="chip" data-g="proc" aria-pressed="false"><i class="dot" style="background:var(--proc)"></i>開発プロセス・品質</button>
+    <button class="chip" data-g="pf" aria-pressed="false"><i class="dot" style="background:var(--pf)"></i>プラットフォーム基盤</button>
+    <span class="zoom">
+      <button class="chip" id="zout">−</button>
+      <button class="chip" id="zfit">全体</button>
+      <button class="chip" id="zin">＋</button>
+    </span>
+  </div>
+  <div class="bar flowbar"><span class="lbl">データの流れ</span>
+    <button class="chip flowchip" data-f="0" aria-pressed="false">Web リクエスト</button>
+    <button class="chip flowchip" data-f="1" aria-pressed="false">加入者トラフィック</button>
+    <button class="chip flowchip" data-f="2" aria-pressed="false">ログ / テレメトリ</button>
+    <button class="chip flowchip" data-f="3" aria-pressed="false">デプロイ</button>
+    <button class="chip flowchip" data-f="4" aria-pressed="false">データ連携</button>
+    <button class="chip flowchip" data-f="5" aria-pressed="false">インシデント対応</button>
+    <button class="chip flowchip" data-f="6" aria-pressed="false">払い出し</button>
+  </div>
+  <div id="status"></div>
+</header>
+<div id="scroller"><svg id="map" viewBox="0 0 2716 2540" role="img" aria-label="インフラ技術領域のマップと、その上を通るデータの流れ"></svg></div>
+<script>
+const N=[["a1","キャパシティ設計","arch",130,148],["a2","可用性 / 冗長設計","arch",350,148],["a3","スケーラビリティ","arch",570,148],["a4","性能設計 / SLA","arch",790,148],["a5","コスト / 調達","arch",1010,148],["a6","事業継続 / BCP","arch",1230,148],["a7","標準化 / 命名規約","arch",1450,148],["a8","法規制 / 事業法","arch",1670,148],["a9","移行計画 / EOL","arch",1890,148],["a10","リスク管理 / 監査","arch",2110,148],["a11","組織 / チーム設計","arch",2330,148],["a12","技術選定 / ADR","arch",2550,148],["c1","DNS","cross",130,1638],["c2","PKI / 証明書","cross",350,1638],["c3","RADIUS / TACACS+","cross",570,1638],["c4","LDAP / IdP","cross",790,1638],["c5","NTP","cross",1010,1638],["c6","監視 / Flow","cross",1230,1638],["c7","クラウド","cross",1450,1638],["c8","セキュリティ設計","cross",1670,1638],["c9","構成管理 / SoT","cross",1890,1638],["c10","変更管理 / 承認","cross",2110,1638],["c11","ログ基盤 / 保全","cross",2330,1638],["c12","秘密情報管理","cross",2550,1638],["f1","TCP/IP","base",130,2462],["f2","パケット解析","base",350,2462],["f3","Linux / systemd","base",570,2462],["f4","サーバ HW","base",790,2462],["f5","光 / 配線","base",1010,2462],["f6","電力 / 空調","base",1230,2462],["f7","障害対応 / 記録","base",1450,2462],["f8","計算機基礎","base",1670,2462],["f9","確率 / 統計","base",1890,2462],["f10","英語 / 一次情報","base",2110,2462],["f11","OS / メモリ管理","base",2330,2462],["f12","文字コード / 時刻","base",2550,2462],["y1","ラック設計","fac",130,834],["y2","電源 / UPS","fac",320,834],["y3","発電機 / 燃料","fac",130,743],["y4","空調 / 熱設計","fac",320,743],["y5","PUE / 効率","fac",130,652],["y6","消火 / 防災","fac",320,652],["y7","耐震 / 免震","fac",130,561],["y8","入退室 / 物理統制","fac",320,561],["y9","回線引込 / MMR","fac",130,470],["y10","ケーブリング","fac",320,470],["y11","フロア荷重","fac",130,379],["y12","立会 / 作業申請","fac",320,379],["y13","遠隔ハンド","fac",130,288],["y14","DC 選定 / 契約","fac",320,288],["o1","光ファイバ / SMF","opt",576,834],["o2","損失 / 光バジェット","opt",766,834],["o3","SFP / QSFP","opt",576,743],["o4","波長 / CWDM","opt",766,743],["o5","DWDM","opt",576,652],["o6","ROADM / OADM","opt",766,652],["o7","OTN / ODU","opt",576,561],["o8","SDH / SONET","opt",766,561],["o9","FEC / OSNR","opt",576,470],["o10","分散 / PMD","opt",766,470],["o11","光アンプ / EDFA","opt",576,379],["o12","心線管理 / 融着","opt",766,379],["o13","メトロ / 長距離","opt",576,288],["o14","ダークファイバ","opt",766,288],["b1","加入者線 / アクセス","sub",1022,834],["b2","ONU / OLT (GPON)","sub",1212,834],["b3","PPPoE / IPoE","sub",1022,743],["b4","BNG / BRAS","sub",1212,743],["b5","DHCP / RA","sub",1022,652],["b6","加入者認証連携","sub",1212,652],["b7","CGNAT / NAPT","sub",1022,561],["b8","IPv6 移行技術","sub",1212,561],["b9","VLAN 収容設計","sub",1022,470],["b10","帯域収容 / 輻輳率","sub",1212,470],["b11","QoS 契約速度","sub",1022,379],["b12","通信ログ / 保全","sub",1212,379],["b13","SLA / 品質測定","sub",1022,288],["b14","加入者管理 / OSS","sub",1212,288],["i1","IX / 接続点","icx",1468,834],["i2","トランジット","icx",1658,834],["i3","ピアリング / PNI","icx",1468,743],["i4","AS 番号 / RIR","icx",1658,743],["i5","アドレス割当","icx",1468,652],["i6","IRR / RADB","icx",1658,652],["i7","RPKI / ROA","icx",1468,561],["i8","ルートフィルタ","icx",1658,561],["i9","BGP コミュニティ","icx",1468,470],["i10","経路広告設計","icx",1658,470],["i11","MANRS / 経路衛生","icx",1468,379],["i12","DDoS 対策 / RTBH","icx",1658,379],["i13","相互接続契約","icx",1468,288],["i14","トラフィック比率","icx",1658,288],["k1","Wi-Fi チャネル設計","wl",1914,834],["k2","電波干渉 / RSSI","wl",2104,834],["k3","ローミング / 802.11r","wl",1914,743],["k4","WLC / AP 管理","wl",2104,743],["k5","無線認証 / WPA3","wl",1914,652],["k6","キャプティブポータル","wl",2104,652],["k7","LTE / 5G RAN","wl",1914,561],["k8","5G コア / UPF","wl",2104,561],["k9","ネットワークスライス","wl",1914,470],["k10","SIM / 加入者識別","wl",2104,470],["k11","バックホール設計","wl",1914,379],["k12","屋内 / 屋外設計","wl",2104,379],["k13","電波法 / 免許","wl",1914,288],["k14","サイトサーベイ","wl",2104,288],["q1","SIP","rt",2360,834],["q2","RTP / RTCP","rt",2550,834],["q3","SBC","rt",2360,743],["q4","コーデック / 帯域","rt",2550,743],["q5","ジッタ / パケロス","rt",2360,652],["q6","遅延設計","rt",2550,652],["q7","音声 QoS","rt",2360,561],["q8","番号ポータビリティ","rt",2550,561],["q9","緊急通報 / 位置","rt",2360,470],["q10","IMS / VoLTE","rt",2550,470],["q11","マルチキャスト / PIM","rt",2360,379],["q12","IGMP スヌーピング","rt",2550,379],["q13","PTP / SyncE","rt",2360,288],["q14","ライブ配信 / RTMP","rt",2550,288],["n1","イーサネット / VLAN","net",130,1514],["n2","STP / LACP","net",320,1514],["n3","IP / サブネット","net",130,1423],["n4","VRRP / 冗長化","net",320,1423],["n5","OSPF / IS-IS","net",130,1332],["n6","BGP","net",320,1332],["n7","VRF / MPLS","net",130,1241],["n8","VXLAN / EVPN","net",320,1241],["n9","FW / NGFW","net",130,1150],["n10","IDS / IPS","net",320,1150],["n11","LB / プロキシ","net",130,1059],["n12","WAF","net",320,1059],["n13","IPsec / IKEv2","net",130,968],["n14","WireGuard","net",320,968],["t1","MTU / MSS","traf",576,1514],["t2","バッファ / キュー","traf",766,1514],["t3","輻輳制御 / RTT","traf",576,1423],["t4","CUBIC / BBR","traf",766,1423],["t5","DSCP / CoS","traf",576,1332],["t6","優先制御 / WFQ","traf",766,1332],["t7","ポリシング","traf",576,1241],["t8","シェーピング","traf",766,1241],["t9","帯域保証 / CIR","traf",576,1150],["t10","WRED / AQM","traf",766,1150],["t11","回線設計 / 収容","traf",576,1059],["t12","トラフィック計測","traf",766,1059],["t13","レート制限 (API)","traf",576,968],["t14","コネクション制御","traf",766,968],["p1","IPMI / PXE","plat",1022,1514],["p2","RAID / NVMe","plat",1212,1514],["p3","KVM / Proxmox","plat",1022,1423],["p4","ESXi / vSphere","plat",1212,1423],["p5","Ceph","plat",1022,1332],["p6","vSAN / HCI","plat",1212,1332],["p7","cgroup / namespace","plat",1022,1241],["p8","Docker / OCI","plat",1212,1241],["p9","Kubernetes","plat",1022,1150],["p10","CNI / Cilium","plat",1212,1150],["p11","Ingress / Gateway","plat",1022,1059],["p12","eBPF","plat",1212,1059],["p13","IaC / Terraform","plat",1022,968],["p14","バックアップ / DR","plat",1212,968],["v1","スキーマ設計","data",1468,1514],["v2","インデックス / 計画","data",1658,1514],["v3","トランザクション","data",1468,1423],["v4","分離レベル / ロック","data",1658,1423],["v5","レプリケーション","data",1468,1332],["v6","シャーディング","data",1658,1332],["v7","マイグレーション","data",1468,1241],["v8","バックアップ / PITR","data",1658,1241],["v9","メッセージキュー","data",1468,1150],["v10","ストリーム処理","data",1658,1150],["v11","全文検索","data",1468,1059],["v12","オブジェクト格納","data",1658,1059],["v13","キャッシュ戦略","data",1468,968],["v14","データモデリング","data",1658,968],["e1","SLI 定義","sre",1914,1514],["e2","エラーバジェット","sre",2104,1514],["e3","アラート設計","sre",1914,1423],["e4","オンコール体制","sre",2104,1423],["e5","インシデント指揮","sre",1914,1332],["e6","ポストモーテム","sre",2104,1332],["e7","ランブック / トイル","sre",1914,1241],["e8","カオス / DR 訓練","sre",2104,1241],["e9","カナリア / 段階展開","sre",1914,1150],["e10","縮退 / 遮断制御","sre",2104,1150],["e11","障害伝播 / 依存","sre",1914,1059],["e12","オートスケール","sre",2104,1059],["e13","変更リスク評価","sre",1914,968],["e14","FinOps / コスト","sre",2104,968],["u1","パッチ適用 / SLA","ops",2360,1514],["u2","脆弱性対応","ops",2550,1514],["u3","鍵 / 証明書更新","ops",2360,1423],["u4","資産管理 / CMDB","ops",2550,1423],["u5","権限棚卸し","ops",2360,1332],["u6","監査証跡","ops",2550,1332],["u7","テナント / クォータ","ops",2360,1241],["u8","キャパシティ運用","ops",2550,1241],["u9","定常作業 / 手順書","ops",2360,1150],["u10","保守契約 / EOSL","ops",2550,1150],["u11","ライセンス管理","ops",2360,1059],["u12","SOC 運用","ops",2550,1059],["u13","フォレンジック","ops",2360,968],["u14","ベンダ調整","ops",2550,968],["l1","型システム","lang",130,2338],["l2","メモリ管理 / GC","lang",320,2338],["l3","並行モデル","lang",130,2247],["l4","非同期 / await","lang",320,2247],["l5","エラー処理 / 例外","lang",130,2156],["l6","依存管理 / SemVer","lang",320,2156],["l7","ビルド / コンパイル","lang",130,2065],["l8","静的解析 / Lint","lang",320,2065],["l9","システムコール","lang",130,1974],["l10","プロファイリング","lang",320,1974],["l11","ランタイム調整","lang",130,1883],["l12","デバッガ / dump","lang",320,1883],["l13","言語選定","lang",130,1792],["l14","標準ライブラリ","lang",320,1792],["s1","HTTP / 2 / 3","app",576,2338],["s2","REST / gRPC","app",766,2338],["s3","TLS 実装","app",576,2247],["s4","OIDC / OAuth2","app",766,2247],["s5","セッション / Cookie","app",576,2156],["s6","認可 / RBAC","app",766,2156],["s7","API バージョニング","app",576,2065],["s8","リトライ / 冪等性","app",766,2065],["s9","タイムアウト設計","app",576,1974],["s10","ログ / トレース","app",766,1974],["s11","SPA / ブラウザ","app",576,1883],["s12","CDN / キャッシュ制御","app",766,1883],["s13","SMTP / IMAP","app",576,1792],["s14","WebSocket / SSE","app",766,1792],["w1","シリアライズ形式","flow",1022,2338],["w2","スキーマ進化","flow",1212,2338],["w3","CDC / 変更捕捉","flow",1022,2247],["w4","ETL / ELT","flow",1212,2247],["w5","バッチ / ジョブ","flow",1022,2156],["w6","API 連携 / Webhook","flow",1212,2156],["w7","バックプレッシャー","flow",1022,2065],["w8","順序保証 / 分割","flow",1212,2065],["w9","at-least-once","flow",1022,1974],["w10","冪等な取り込み","flow",1212,1974],["w11","イベントソーシング","flow",1022,1883],["w12","データリネージ","flow",1212,1883],["w13","データ品質 / 検証","flow",1022,1792],["w14","データ保持 / 削除","flow",1212,1792],["d1","オブジェクト指向","dsgn",1468,2338],["d2","関数型 / 型駆動","dsgn",1658,2338],["d3","データ構造 / 計算量","dsgn",1468,2247],["d4","並行設計 / 競合","dsgn",1658,2247],["d5","設計原則 / SOLID","dsgn",1468,2156],["d6","リファクタリング","dsgn",1658,2156],["d7","ドメイン駆動設計","dsgn",1468,2065],["d8","レイヤード / 依存","dsgn",1658,2065],["d9","境界 / 集約","dsgn",1468,1974],["d10","マイクロサービス","dsgn",1658,1974],["d11","イベント駆動 / CQRS","dsgn",1468,1883],["d12","分散システム原則","dsgn",1658,1883],["d13","SLO / 信頼性設計","dsgn",1468,1792],["d14","トレードオフ分析","dsgn",1658,1792],["g1","Git 運用 / ブランチ","proc",1914,2338],["g2","コードレビュー","proc",2104,2338],["g3","CI / パイプライン","proc",1914,2247],["g4","CD / デプロイ戦略","proc",2104,2247],["g5","テストピラミッド","proc",1914,2156],["g6","契約テスト","proc",2104,2156],["g7","E2E / 負荷試験","proc",1914,2065],["g8","フィーチャーフラグ","proc",2104,2065],["g9","ロールバック設計","proc",1914,1974],["g10","SBOM / 供給網","proc",2104,1974],["g11","脆弱性スキャン","proc",1914,1883],["g12","DORA / 開発指標","proc",2104,1883],["g13","アジャイル / 反復","proc",1914,1792],["g14","運用ドキュメント","proc",2104,1792],["z1","開発者ポータル","pf",2360,2338],["z2","ゴールデンパス","pf",2550,2338],["z3","セルフサービス化","pf",2360,2247],["z4","テンプレート化","pf",2550,2247],["z5","内部 API / 抽象化","pf",2360,2156],["z6","環境払い出し","pf",2550,2156],["z7","シークレット配布","pf",2360,2065],["z8","権限モデル / RBAC","pf",2550,2065],["z9","課金 / 按分","pf",2360,1974],["z10","オンボーディング","pf",2550,1974],["z11","基盤 SLO","pf",2360,1883],["z12","拡張点 / プラグイン","pf",2550,1883],["z13","廃止 / 移行支援","pf",2360,1792],["z14","利用状況の可視化","pf",2550,1792]];
+const E=[["f1","n1"],["f1","n3"],["f1","s1"],["f1","p10"],["f1","f2"],["f1","t1"],["f1","t3"],["f2","n10"],["f2","s1"],["f2","n3"],["f2","f7"],["f2","t3"],["f2","t12"],["f2","o2"],["f3","p3"],["f3","p7"],["f3","p8"],["f3","p1"],["f3","d4"],["f3","t2"],["f3","l9"],["f3","f11"],["f4","p1"],["f4","p2"],["f4","p3"],["f4","f5"],["f4","f6"],["f5","n1"],["f5","p2"],["f5","t11"],["f5","o1"],["f5","o12"],["f6","p1"],["f7","c6"],["f7","p14"],["f7","n4"],["f7","g13"],["f7","d13"],["f7","a6"],["f7","a8"],["f7","g9"],["f7","o12"],["f8","d1"],["f8","d3"],["f8","d4"],["f8","d12"],["f8","f3"],["f8","l1"],["f8","l2"],["f9","t11"],["f9","a1"],["f9","t3"],["f9","c6"],["f9","o9"],["f10","i6"],["f10","n6"],["f10","g14"],["f10","a7"],["f11","l2"],["f11","p7"],["f11","l9"],["f11","l11"],["f12","v1"],["f12","s13"],["f12","c5"],["f12","l14"],["o1","o2"],["o1","o3"],["o2","o9"],["o3","o4"],["o4","o5"],["o5","o6"],["o5","o11"],["o6","o7"],["o7","o8"],["o9","o10"],["o10","o5"],["o11","o13"],["o13","o5"],["o12","o1"],["o14","o13"],["o2","o11"],["o3","o9"],["o13","o7"],["o4","o6"],["o3","n1"],["o7","n7"],["o8","n7"],["o13","t11"],["o3","t11"],["o14","i1"],["o13","i1"],["o5","a1"],["o14","a5"],["o13","a9"],["o6","a2"],["o14","i13"],["o8","a9"],["i1","i2"],["i1","i3"],["i2","i3"],["i4","i5"],["i4","i6"],["i6","i7"],["i7","i8"],["i8","i9"],["i9","i10"],["i10","i3"],["i11","i7"],["i11","i6"],["i12","i9"],["i12","i8"],["i13","i2"],["i13","i1"],["i14","i3"],["i14","i2"],["i5","i10"],["i11","i12"],["i3","n6"],["i8","n6"],["i9","n6"],["i10","n6"],["i2","t11"],["i14","t12"],["i5","n3"],["i12","n9"],["i12","t7"],["i13","a8"],["i11","a8"],["i4","a8"],["i13","a5"],["i12","c8"],["i14","a1"],["i5","c9"],["i6","c9"],["n1","n2"],["n1","n3"],["n3","n4"],["n3","n5"],["n5","n6"],["n6","n7"],["n6","n8"],["n1","n8"],["n3","n9"],["n9","n10"],["n9","n11"],["n11","n12"],["n3","n13"],["n13","n14"],["n7","n8"],["n4","n5"],["n9","n12"],["n6","n13"],["n1","p3"],["n8","p10"],["n6","p10"],["n11","p11"],["n3","p9"],["n9","p10"],["n1","p5"],["n12","p11"],["n11","s1"],["n11","s3"],["n11","s12"],["n11","d10"],["n4","d13"],["n11","d11"],["t1","t3"],["t2","t3"],["t3","t4"],["t2","t10"],["t5","t6"],["t6","t2"],["t7","t8"],["t7","t5"],["t8","t9"],["t9","t11"],["t11","t12"],["t12","t6"],["t13","t14"],["t13","t8"],["t14","t2"],["t1","t11"],["t4","t10"],["t9","t6"],["t1","n3"],["t1","n7"],["t5","n1"],["t5","n7"],["t7","n9"],["t9","n7"],["t11","n6"],["t12","n6"],["t13","n11"],["t14","n11"],["t8","n1"],["t12","c6"],["t5","n8"],["t1","n8"],["t3","s1"],["t4","s12"],["t13","s2"],["t14","v3"],["t12","s10"],["t5","p10"],["t1","p10"],["t13","p11"],["t2","p12"],["t14","p9"],["t13","d13"],["t3","d12"],["t13","g7"],["t11","v5"],["c1","n11"],["c1","s1"],["c1","s13"],["c1","s12"],["c1","c5"],["c2","n11"],["c2","n13"],["c2","s3"],["c2","c5"],["c2","c12"],["c3","n13"],["c3","n1"],["c3","c4"],["c3","n9"],["c4","s4"],["c4","p9"],["c5","s5"],["c5","c6"],["c6","n6"],["c6","s10"],["c6","p9"],["c6","n1"],["c6","d13"],["c6","c11"],["c7","p9"],["c7","n6"],["c7","p13"],["c7","n8"],["c7","d10"],["c7","a5"],["c7","v12"],["c8","n9"],["c8","s4"],["c8","d5"],["c8","p10"],["c8","s3"],["c8","f7"],["c8","g5"],["c8","g10"],["c8","c12"],["c9","p13"],["c9","n3"],["c9","a7"],["c9","f7"],["c9","c10"],["c9","g3"],["c9","g14"],["c10","f7"],["c10","a7"],["c10","g3"],["c10","p13"],["c10","a9"],["c10","g9"],["c11","s10"],["c11","a8"],["c11","f7"],["c11","v10"],["c12","p13"],["c12","g3"],["c12","s4"],["p1","p3"],["p1","p4"],["p2","p5"],["p2","p6"],["p3","p5"],["p4","p6"],["p3","p7"],["p7","p8"],["p8","p9"],["p9","p10"],["p9","p11"],["p7","p12"],["p10","p12"],["p9","p13"],["p5","p14"],["p3","p13"],["p6","p3"],["p8","l7"],["p9","g4"],["p13","g3"],["p8","g3"],["p11","s1"],["p9","s10"],["p9","l2"],["p7","l9"],["p12","l11"],["p5","v5"],["p14","v8"],["p5","v12"],["p9","v6"],["l1","l5"],["l1","l14"],["l2","l3"],["l3","l4"],["l4","l9"],["l5","l14"],["l6","l7"],["l7","l8"],["l8","l10"],["l9","l2"],["l10","l11"],["l11","l12"],["l12","l10"],["l13","l1"],["l13","l6"],["l14","l6"],["l3","l11"],["l2","l11"],["l1","s2"],["l5","s8"],["l3","s14"],["l4","s14"],["l7","g3"],["l10","s10"],["l1","v14"],["l5","v3"],["l2","v13"],["l1","d2"],["l3","d4"],["l13","d14"],["l8","d6"],["l8","g11"],["l6","g10"],["l12","g7"],["s1","s2"],["s1","s3"],["s2","s4"],["s4","s5"],["s4","s6"],["s2","s7"],["s2","s8"],["s8","s9"],["s9","s2"],["s10","s8"],["s1","s11"],["s1","s12"],["s12","s11"],["s13","s1"],["s14","s1"],["s5","s6"],["s10","s9"],["s4","c2"],["s12","v13"],["s8","v9"],["s9","v3"],["s2","v2"],["s7","g8"],["s1","g7"],["s2","d8"],["s10","d13"],["s8","d12"],["s6","d9"],["v1","v2"],["v1","v14"],["v2","v3"],["v3","v4"],["v4","v5"],["v5","v6"],["v6","v1"],["v7","v1"],["v8","v5"],["v9","v10"],["v10","v11"],["v11","v12"],["v12","v8"],["v13","v2"],["v13","v9"],["v14","v9"],["v3","v13"],["v6","v10"],["v14","d7"],["v3","d12"],["v9","d11"],["v6","d12"],["v1","d9"],["v2","d3"],["v7","g4"],["v8","a6"],["v5","a2"],["v13","a3"],["d1","d3"],["d2","d3"],["d1","d5"],["d2","d5"],["d3","d4"],["d5","d6"],["d5","d7"],["d7","d8"],["d7","d9"],["d8","d9"],["d9","d10"],["d10","d11"],["d10","d12"],["d12","d13"],["d4","d12"],["d9","d11"],["d5","d14"],["d14","d10"],["d14","d13"],["d10","p9"],["d13","p9"],["d12","p5"],["d10","p8"],["d13","p14"],["d12","p6"],["d10","p11"],["d5","g2"],["d6","g2"],["d10","g13"],["d13","a2"],["d13","a4"],["d5","a7"],["d6","a9"],["d14","a12"],["d10","a11"],["g1","g2"],["g2","g3"],["g3","g4"],["g3","g5"],["g5","g6"],["g6","g7"],["g4","g8"],["g8","g9"],["g9","g4"],["g10","g3"],["g11","g10"],["g12","g4"],["g13","g1"],["g14","g2"],["g5","g7"],["g11","g3"],["g13","g12"],["g14","g9"],["g12","a4"],["g13","a11"],["g4","a9"],["g10","a10"],["g14","a7"],["g1","a7"],["a1","t11"],["a1","p2"],["a1","n6"],["a1","a3"],["a1","a5"],["a1","t9"],["a1","f5"],["a2","n4"],["a2","p14"],["a2","p6"],["a2","a6"],["a2","n5"],["a2","o13"],["a3","p9"],["a3","d10"],["a3","t11"],["a3","t13"],["a4","t3"],["a4","c6"],["a4","s2"],["a4","t6"],["a4","t1"],["a5","p13"],["a5","t11"],["a5","p4"],["a5","i2"],["a6","p14"],["a6","n13"],["a6","o14"],["a7","p13"],["a7","c8"],["a7","a9"],["a7","n3"],["a8","c7"],["a8","a7"],["a8","n6"],["a8","c6"],["a8","t11"],["a9","p4"],["a9","n1"],["a9","p3"],["a9","l13"],["a10","a8"],["a10","c8"],["a10","f7"],["a10","p14"],["a10","a6"],["a10","c10"],["a11","a7"],["a11","g12"],["a12","l13"],["a12","a7"],["a12","g14"],["a12","a5"],["b1","b2"],["b1","b3"],["b2","b3"],["b3","b4"],["b4","b7"],["b4","b6"],["b6","b14"],["b5","b3"],["b5","b8"],["b4","b9"],["b9","b10"],["b10","b11"],["b11","b4"],["b8","b7"],["b12","b14"],["b13","b10"],["b13","b14"],["b12","b4"],["b1","b13"],["b2","o1"],["b2","o3"],["b1","f5"],["b4","n3"],["b4","n6"],["b7","n3"],["b6","c3"],["b6","c4"],["b5","c1"],["b10","t11"],["b11","t9"],["b11","t7"],["b12","a8"],["b12","c11"],["b14","c9"],["b13","a4"],["b13","c6"],["b8","i5"],["b7","n9"],["b9","n1"],["b14","a8"],["b4","t8"],["w1","w2"],["w2","w3"],["w3","w4"],["w4","w5"],["w7","w9"],["w9","w10"],["w10","w3"],["w11","w3"],["w12","w4"],["w8","w9"],["w13","w4"],["w6","w1"],["w14","w12"],["w5","w13"],["w2","w6"],["w7","w8"],["w11","w12"],["w13","w2"],["w3","v5"],["w4","v14"],["w5","v7"],["w11","v9"],["w7","v9"],["w8","v10"],["w13","v1"],["w14","v8"],["w12","v11"],["w1","v12"],["w6","s2"],["w1","s2"],["w10","s8"],["w6","s14"],["w11","d11"],["w10","d12"],["w2","d7"],["w13","g6"],["w2","g6"],["w12","c9"],["w14","c11"],["w1","f12"],["w7","t2"],["w7","t14"],["w14","a8"],["w12","a10"],["w4","a1"],["y1","y2"],["y1","y4"],["y2","y3"],["y2","y5"],["y4","y5"],["y1","y11"],["y1","y10"],["y6","y7"],["y7","y11"],["y8","y12"],["y12","y13"],["y9","y10"],["y14","y9"],["y14","y1"],["y14","y5"],["y3","y6"],["y8","y6"],["y2","f6"],["y4","f6"],["y1","f4"],["y9","o1"],["y9","o12"],["y10","o12"],["y8","u6"],["y8","a10"],["y14","a5"],["y5","a5"],["y13","u9"],["y12","c10"],["y11","p2"],["y3","a6"],["y9","i1"],["y14","a8"],["y6","a6"],["k1","k2"],["k1","k14"],["k2","k14"],["k1","k3"],["k3","k4"],["k4","k5"],["k5","k6"],["k7","k8"],["k8","k9"],["k8","k10"],["k7","k11"],["k11","k1"],["k12","k14"],["k12","k7"],["k13","k7"],["k13","k1"],["k9","k11"],["k10","k5"],["k5","c3"],["k6","c1"],["k4","n1"],["k1","n1"],["k11","o13"],["k11","t11"],["k8","n7"],["k9","t9"],["k10","b6"],["k7","b1"],["k13","a8"],["k8","p9"],["k2","f9"],["k9","a4"],["k6","s4"],["q1","q2"],["q1","q3"],["q2","q4"],["q2","q5"],["q5","q6"],["q4","q7"],["q7","q5"],["q8","q1"],["q9","q10"],["q10","q1"],["q10","q8"],["q11","q12"],["q11","q14"],["q14","q4"],["q13","q2"],["q6","q13"],["q9","q8"],["q3","q9"],["q7","t5"],["q7","t6"],["q5","t2"],["q3","n9"],["q1","c1"],["q10","k8"],["q13","o5"],["q11","n5"],["q12","n1"],["q9","a8"],["q8","a8"],["q14","s12"],["q6","t3"],["q2","t1"],["q13","c5"],["e1","e2"],["e1","e3"],["e3","e4"],["e4","e5"],["e5","e6"],["e6","e7"],["e7","e4"],["e2","e13"],["e8","e11"],["e11","e10"],["e10","e9"],["e9","e13"],["e12","e14"],["e12","e10"],["e13","e5"],["e6","e11"],["e8","e5"],["e1","e11"],["e1","d13"],["e2","a4"],["e3","c6"],["e3","c11"],["e4","f7"],["e5","f7"],["e6","c10"],["e7","c9"],["e8","p14"],["e8","a6"],["e9","g4"],["e9","g8"],["e10","s8"],["e10","n11"],["e11","v5"],["e12","p9"],["e12","t11"],["e13","c10"],["e14","a5"],["e14","c7"],["e1","b13"],["e3","t12"],["e10","s9"],["e11","d12"],["u1","u2"],["u2","u12"],["u12","u13"],["u13","u6"],["u5","u6"],["u4","u1"],["u4","u10"],["u10","u14"],["u9","u1"],["u9","u7"],["u7","u8"],["u8","u4"],["u11","u4"],["u11","u14"],["u3","u1"],["u3","u5"],["u2","u10"],["u13","u5"],["u1","g11"],["u2","c8"],["u2","g10"],["u3","c2"],["u3","c12"],["u4","c9"],["u5","c4"],["u6","c11"],["u6","a10"],["u7","p9"],["u8","a1"],["u9","e7"],["u10","a9"],["u11","a5"],["u12","n10"],["u13","a8"],["u14","a5"],["u1","p3"],["u8","t11"],["u12","i12"],["z1","z2"],["z2","z4"],["z4","z3"],["z3","z6"],["z6","z7"],["z7","z8"],["z8","z3"],["z9","z14"],["z14","z11"],["z11","z3"],["z10","z1"],["z10","z2"],["z12","z5"],["z5","z3"],["z13","z10"],["z13","z4"],["z11","z6"],["z9","z6"],["z3","p13"],["z4","g3"],["z5","s2"],["z6","p9"],["z7","c12"],["z8","c4"],["z9","a5"],["z11","e1"],["z10","a11"],["z12","g1"],["z13","a9"],["z14","c6"],["z2","d14"],["z1","g14"],["z3","u7"],["z6","v7"]];
+const BANDS=[[34,86,2612,96,"アーキテクチャ — 事業と技術の接続面",48,110],[34,250,382,620,"ファシリティ / DC",48,238],[480,250,382,620,"伝送・光",494,238],[926,250,382,620,"加入者収容",940,238],[1372,250,382,620,"相互接続",1386,238],[1818,250,382,620,"無線・モバイル",1832,238],[2264,250,382,620,"音声・リアルタイム",2278,238],[34,930,382,620,"ネットワーク",48,918],[480,930,382,620,"帯域・輻輳制御",494,918],[926,930,382,620,"サーバ基盤",940,918],[1372,930,382,620,"データ・永続化",1386,918],[1818,930,382,620,"SRE / 信頼性",1832,918],[2264,930,382,620,"運用・保守",2278,918],[34,1576,2612,96,"横断領域 — 上下どちらにも刺さる",48,1600],[34,1754,382,620,"言語・ランタイム",48,1742],[480,1754,382,620,"アプリ実装",494,1742],[926,1754,382,620,"データフロー / 連携",940,1742],[1372,1754,382,620,"設計・方法論",1386,1742],[1818,1754,382,620,"開発プロセス・品質",1832,1742],[2264,1754,382,620,"プラットフォーム基盤",2278,1742],[34,2400,2612,96,"土台 — 全領域の前提",48,2424]];
+const FLOWS=[["Web リクエスト",["c1","s12","i2","n6","n9","n11","p11","p9","s1","s6","v3","v2"]],["加入者トラフィック",["b1","b2","b3","b6","b4","b11","t11","n6","i2","i1"]],["ログ / テレメトリ",["s10","v9","w7","v10","c11","c6","e3","f7"]],["デプロイ",["g1","g3","g10","g4","p13","p9","e9","e13"]],["データ連携",["w2","w3","v9","w7","w10","v10","w12","w14"]],["インシデント対応",["e3","e4","e5","e10","e6","e7","c10"]],["払い出し",["z1","z2","z3","z6","p13","p9","z14"]]];
+const W=160,H=42,NS="http://www.w3.org/2000/svg";
+const map=document.getElementById("map"),byId={};
+N.forEach(n=>byId[n[0]]={id:n[0],label:n[1],g:n[2],x:n[3],y:n[4]});
+const deg={};E.forEach(([a,b])=>{deg[a]=(deg[a]||0)+1;deg[b]=(deg[b]||0)+1});
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e}
+const defs=el("defs",{});
+const mk=el("marker",{id:"fa",viewBox:"0 0 10 10",refX:"9",refY:"5",markerWidth:"5",markerHeight:"5",orient:"auto-start-reverse"});
+mk.appendChild(el("path",{d:"M1 1L9 5L1 9",fill:"none",stroke:"var(--flowline)","stroke-width":"2","stroke-linecap":"round","stroke-linejoin":"round"}));
+defs.appendChild(mk);map.appendChild(defs);
+BANDS.forEach(([x,y,w,h,label,lx,ly])=>{
+  map.appendChild(el("rect",{x,y,width:w,height:h,rx:14,class:"band"}));
+  const t=el("text",{x:lx,y:ly,class:"bandlabel"});t.textContent=label;map.appendChild(t);
+});
+const eg=el("g",{});map.appendChild(eg);
+const edgeEls=[],adj={};
+E.forEach(([a,b])=>{
+  const A=byId[a],B=byId[b];if(!A||!B)return;
+  (adj[a]=adj[a]||[]).push(b);(adj[b]=adj[b]||[]).push(a);
+  const dx=B.x-A.x,dy=B.y-A.y,len=Math.hypot(dx,dy)||1,bow=Math.min(len*.06,58);
+  const mx=(A.x+B.x)/2-dy/len*bow,my=(A.y+B.y)/2+dx/len*bow;
+  const p=el("path",{d:"M"+A.x+" "+A.y+" Q"+mx+" "+my+" "+B.x+" "+B.y,class:"edge"});
+  p.dataset.a=a;p.dataset.b=b;eg.appendChild(p);edgeEls.push(p);
+});
+const ng=el("g",{});map.appendChild(ng);
+const fg=el("g",{});map.appendChild(fg);
+const nodeEls={};
+N.forEach(([id,label,g,x,y])=>{
+  const gr=el("g",{class:"node",tabindex:"0",role:"button"});
+  gr.dataset.id=id;gr.dataset.g=g;
+  gr.appendChild(el("rect",{x:x-W/2,y:y-H/2,width:W,height:H,rx:7,
+    fill:"var(--"+g+"-bg)",stroke:"var(--"+g+"-st)","stroke-width":1}));
+  const t=el("text",{x,y:y+1,"text-anchor":"middle","dominant-baseline":"central",
+    "font-size":"13","font-weight":"400",fill:"var(--"+g+")"});
+  t.textContent=label;gr.appendChild(t);
+  ng.appendChild(gr);nodeEls[id]=gr;
+});
+const status=document.getElementById("status"),base=N.length+" ノード / "+E.length+" 接続";
+status.textContent=base;
+function clear(){
+  edgeEls.forEach(p=>p.classList.remove("hot","dim"));
+  Object.values(nodeEls).forEach(n=>n.classList.remove("dim"));
+  while(fg.firstChild)fg.removeChild(fg.firstChild);
+  status.textContent=base;
+  document.querySelectorAll(".chip[data-g],.flowchip").forEach(c=>c.setAttribute("aria-pressed","false"));
+}
+function focusNode(id){
+  clear();
+  const keep=new Set([id].concat(adj[id]||[]));
+  edgeEls.forEach(p=>{p.classList.add(p.dataset.a===id||p.dataset.b===id?"hot":"dim")});
+  Object.values(nodeEls).forEach(n=>{if(!keep.has(n.dataset.id))n.classList.add("dim")});
+  status.innerHTML="<b>"+byId[id].label+"</b> — 接続 "+(deg[id]||0);
+}
+function focusGroup(g){
+  clear();
+  edgeEls.forEach(p=>{p.classList.add(byId[p.dataset.a].g===g||byId[p.dataset.b].g===g?"hot":"dim")});
+  Object.values(nodeEls).forEach(n=>{
+    const nb=(adj[n.dataset.id]||[]).some(m=>byId[m].g===g);
+    if(n.dataset.g!==g&&!nb)n.classList.add("dim");
+  });
+  const chip=document.querySelector('.chip[data-g="'+g+'"]');
+  status.innerHTML="<b>"+chip.textContent.trim()+"</b> — "+N.filter(n=>n[2]===g).length+" ノードと、その接続先";
+  chip.setAttribute("aria-pressed","true");
+}
+function edgePoint(A,B){
+  const dx=B.x-A.x,dy=B.y-A.y;
+  const sx=dx===0?Infinity:(W/2+6)/Math.abs(dx), sy=dy===0?Infinity:(H/2+6)/Math.abs(dy);
+  const s=Math.min(sx,sy);return [A.x+dx*s,A.y+dy*s];
+}
+function showFlow(fi){
+  clear();
+  const [name,seq]=FLOWS[fi];
+  const set=new Set(seq);
+  edgeEls.forEach(p=>p.classList.add("dim"));
+  Object.values(nodeEls).forEach(n=>{if(!set.has(n.dataset.id))n.classList.add("dim")});
+  for(let k=0;k<seq.length-1;k++){
+    const A=byId[seq[k]],B=byId[seq[k+1]];
+    const [x1,y1]=edgePoint(A,B),[x2,y2]=edgePoint(B,A);
+    const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy)||1,bow=Math.min(len*.1,70);
+    const mx=(x1+x2)/2-dy/len*bow,my=(y1+y2)/2+dx/len*bow;
+    fg.appendChild(el("path",{d:"M"+x1+" "+y1+" Q"+mx+" "+my+" "+x2+" "+y2,class:"flowpath","marker-end":"url(#fa)"}));
+  }
+  seq.forEach((id,k)=>{const n=byId[id];
+    const t=el("text",{x:n.x-W/2+8,y:n.y-H/2-6,class:"flowseq"});t.textContent=(k+1);fg.appendChild(t)});
+  status.innerHTML="<b>"+name+"</b> — "+seq.map(id=>byId[id].label).join(" → ");
+  document.querySelector('.flowchip[data-f="'+fi+'"]').setAttribute("aria-pressed","true");
+}
+let cur=null,curG=null,curF=null;
+ng.addEventListener("click",e=>{
+  const g=e.target.closest(".node");if(!g)return;
+  e.stopPropagation();curG=null;curF=null;
+  if(cur===g.dataset.id){cur=null;clear()}else{cur=g.dataset.id;focusNode(cur)}
+});
+ng.addEventListener("keydown",e=>{
+  if(e.key!=="Enter"&&e.key!==" ")return;
+  const g=e.target.closest(".node");if(!g)return;
+  e.preventDefault();curG=null;curF=null;cur=g.dataset.id;focusNode(cur);
+});
+document.getElementById("scroller").addEventListener("click",()=>{cur=null;curG=null;curF=null;clear()});
+document.querySelectorAll(".chip[data-g]").forEach(c=>{
+  c.addEventListener("click",()=>{const g=c.dataset.g;cur=null;curF=null;
+    if(curG===g){curG=null;clear()}else{curG=g;focusGroup(g)}});
+});
+document.querySelectorAll(".flowchip").forEach(c=>{
+  c.addEventListener("click",()=>{const f=+c.dataset.f;cur=null;curG=null;
+    if(curF===f){curF=null;clear()}else{curF=f;showFlow(f)}});
+});
+const sc=document.getElementById("scroller");
+let scale=null;
+function setW(px){scale=px;map.setAttribute("width",px);map.style.width=px+"px"}
+function fit(){scale=null;map.removeAttribute("width");map.style.width="100%"}
+function nudge(f){const w=scale||sc.clientWidth;setW(Math.max(560,Math.min(11000,Math.round(w*f))))}
+document.getElementById("zin").addEventListener("click",()=>nudge(1.35));
+document.getElementById("zout").addEventListener("click",()=>nudge(1/1.35));
+document.getElementById("zfit").addEventListener("click",fit);
+if(sc.clientWidth<1400){setW(2716)}else{fit()}
+</script>
+</body>
+</html>
